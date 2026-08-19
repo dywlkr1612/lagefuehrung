@@ -510,8 +510,8 @@ const PAGE_HTML = `<!DOCTYPE html>
   .el-card.builtin .x{color:#3a4150}
   .tagline{font-size:10px;color:var(--ink-dim);margin-left:auto}
   /* ===== Grafischer Einsatzplan ===== */
-  #viewPlan{display:none;height:100%;overflow:auto}
-  #viewPlan.active{display:block}
+  #viewPlan{display:none;height:100%;min-height:0;flex-direction:column}
+  #viewPlan.active{display:flex}
   /* Status-Übersicht (im mittleren Bereich, umschaltbar wie die Tabelle) */
   #statusView{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;overflow:hidden;z-index:400}
   #mapPane.show-status #statusView{display:flex}
@@ -525,23 +525,27 @@ const PAGE_HTML = `<!DOCTYPE html>
   .status-block-hd .ea-cols-btn{margin-left:auto}
   table.status{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px}
   table.status th,table.status td{border:1px solid var(--line);padding:0;text-align:center;white-space:nowrap}
-  table.status thead th{position:sticky;top:0;background:var(--panel-2);z-index:2;padding:7px 8px;font-weight:600;vertical-align:bottom}
+  /* Spaltenüberschriften senkrecht (von unten nach oben), damit die Spalten schmal bleiben */
+  table.status thead th.colhd{position:sticky;top:0;background:var(--panel-2);z-index:2;height:150px;width:34px;min-width:34px;max-width:34px;padding:6px 0;font-weight:600;vertical-align:bottom}
+  table.status thead th.colhd>span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-size:11px;line-height:1.1;max-height:140px;overflow:hidden}
+  table.status thead th.rowhd,table.status thead th.sonsthd{position:sticky;top:0;background:var(--panel-2);z-index:3;padding:7px 8px;font-weight:600;vertical-align:bottom}
   table.status th.rowhd,table.status td.rowhd{position:sticky;left:0;background:var(--panel-2);z-index:1;text-align:left;padding:7px 10px;min-width:180px;font-weight:600}
+  table.status thead th.rowhd{z-index:4}
   table.status tr.ea-row td.rowhd,table.status tr.ea-row th.rowhd{background:#1b2330;color:#7fb3e6}
   table.status .ea-toggle{cursor:pointer;display:inline-block;width:16px;color:#7fb3e6;font-size:11px}
   table.status .ea-toggle-empty{display:inline-block;width:16px}
   table.status .ua-count{color:var(--ink-dim);font-weight:400;font-size:11px}
   table.status tr.ua-row td.rowhd{padding-left:24px;color:var(--ink)}
-  table.status td.stcell{cursor:pointer;min-width:64px;height:34px;color:var(--ink-dim)}
+  table.status td.stcell{cursor:pointer;width:34px;min-width:34px;max-width:34px;height:32px;color:var(--ink-dim);font-size:11px}
   table.status td.stcell:hover{background:var(--panel-2)}
-  table.status td.stcell.done{background:rgba(63,185,80,.18);color:#3fb950;font-family:var(--mono);font-weight:700}
+  table.status td.stcell.done{background:rgba(63,185,80,.18);color:#3fb950;font-family:var(--mono);font-weight:700;font-size:10px}
   table.status td.stcell.ro{cursor:not-allowed;opacity:.6}
   table.status td.stcell.auto{cursor:default;color:var(--ink-dim);font-style:italic}
   table.status td.stcell.auto:hover{background:transparent}
   table.status td.stcell.auto.done{background:rgba(63,185,80,.10);color:#7fce93;font-style:normal}
-  table.status td.sonst{min-width:170px;padding:0}
-  table.status td.sonst textarea{width:100%;min-height:32px;background:transparent;border:none;color:var(--ink);font-size:12px;font-family:var(--sans);padding:5px 7px;resize:vertical}
-  .status-config{position:absolute;right:16px;top:52px;width:320px;max-height:70%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:12px;z-index:50}
+  table.status td.sonst{min-width:150px;padding:0}
+  table.status td.sonst textarea{width:100%;min-height:30px;background:transparent;border:none;color:var(--ink);font-size:12px;font-family:var(--sans);padding:5px 7px;resize:vertical}
+  .status-config{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:340px;max-height:80%;overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:14px;z-index:600}
   .status-config.hidden{display:none}
   .sc-head{font-size:13px;font-weight:600;margin-bottom:8px}
   .sc-note{color:var(--ink-dim);font-weight:400;font-size:11px}
@@ -550,7 +554,7 @@ const PAGE_HTML = `<!DOCTYPE html>
   .sc-item:hover{background:var(--panel-2)}
   .sc-item input{accent-color:var(--accent)}
   .sc-actions{margin-top:10px;text-align:right}
-  .plan-scroll{min-width:900px;padding:20px 24px 60px}
+  .plan-scroll{min-width:900px;padding:20px 24px 60px;flex:1;overflow:auto}
   /* Befehl-Seite */
   #viewBefehl{display:none;height:100%;min-height:0}
   #viewBefehl.active{display:block}
@@ -580,7 +584,7 @@ const PAGE_HTML = `<!DOCTYPE html>
   .bt-name{overflow:hidden;text-overflow:ellipsis}
   .bt-children{margin-left:14px;border-left:1px solid var(--line);padding-left:4px}
   .bt-badge{margin-left:auto;font-size:9px;color:var(--ink-dim);font-family:var(--mono)}
-  .plan-toolbar{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .plan-toolbar{display:flex;align-items:center;gap:14px;flex:0 0 auto;padding:12px 24px;background:var(--bg);border-bottom:1px solid var(--line)}
   .plan-hint{font-size:12px;color:var(--ink-dim)}
   .plan-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
   .plan-top{display:grid;grid-template-columns:1.1fr .7fr 1.6fr;gap:14px;align-items:start}
@@ -808,12 +812,12 @@ const PAGE_HTML = `<!DOCTYPE html>
 
   <!-- ============ GRAFISCHER EINSATZPLAN ============ -->
   <div class="view" id="viewPlan">
+    <div class="plan-toolbar">
+      <button class="hbtn" id="planAddEA">+ Einsatzabschnitt</button>
+      <button class="hbtn" id="planPdf" title="Grafischen Einsatzplan als PDF speichern">🖨 PDF</button>
+      <span class="plan-hint">Felder direkt anklicken und ausfüllen · „+ UA" fügt einen Unterabschnitt hinzu</span>
+    </div>
     <div class="plan-scroll">
-      <div class="plan-toolbar">
-        <button class="hbtn" id="planAddEA">+ Einsatzabschnitt</button>
-        <button class="hbtn" id="planPdf" title="Grafischen Einsatzplan als PDF speichern">🖨 PDF</button>
-        <span class="plan-hint">Felder direkt anklicken und ausfüllen · „+ UA" fügt einen Unterabschnitt hinzu</span>
-      </div>
 
       <!-- Kopfzeile -->
       <div class="plan-top">
@@ -1533,7 +1537,7 @@ function renderStatus(){
     const uas=ea.uas||[];
     const open=!!statusExpanded[ea.id];
     const canCfg=roleIsFG();
-    const head='<tr><th class="rowhd">Abschnitt</th>'+cols.map(k=>\`<th>\${esc(statusLabel(k))}</th>\`).join('')+'<th>Sonstige</th></tr>';
+    const head='<tr><th class="rowhd">Abschnitt</th>'+cols.map(k=>\`<th class="colhd"><span>\${esc(statusLabel(k))}</span></th>\`).join('')+'<th class="sonsthd">Sonstige</th></tr>';
     let rows=statusRow(ea,'ea',ea.name,cols,uas.length,open);
     if(open) uas.forEach(ua=>{ rows+=statusRow(ua,'ua',ea.name,cols,0,false); });
     const cfgBtn=canCfg?\`<button class="h2act ea-cols-btn" data-eacols="\${ea.id}" title="Spalten für \${esc(ea.name)} festlegen">⚙ Spalten</button>\`:'';
