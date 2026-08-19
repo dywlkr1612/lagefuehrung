@@ -1,0 +1,12 @@
+{
+  "name": "lagefuehrung",
+  "version": "1.0.0",
+  "description": "Lagefuehrung – Cloud-Variante (Cloudflare Worker + Durable Object)",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+name = "lagefuehrung"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# Ein Durable Object ("die Lage") hält den gemeinsamen Zustand und die
+# WebSocket-Verbindungen. Der Worker leitet alle Anfragen an diese eine Instanz.
+[[durable_objects.bindings]]
+name = "LAGE"
+class_name = "LageRoom"
+
+# SQLite-Backend: nötig, damit Durable Objects auch im kostenlosen
+# Workers-Free-Plan nutzbar sind.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LageRoom"]
