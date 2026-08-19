@@ -274,7 +274,7 @@ const PAGE_HTML = `<!DOCTYPE html>
   input,select{font-family:inherit}
 
   .app{display:grid;grid-template-rows:auto 1fr;height:100vh;min-height:0;position:relative}
-  .app>header{grid-row:1;position:relative;z-index:5}
+  .app>header{grid-row:1;position:relative;z-index:100}
   /* Inhaltsbereich = Zeile 2. Alle Ansichten liegen deckungsgleich darin und
      füllen ihn absolut aus; sichtbar ist per display:none/block bzw. .hidden
      immer genau eine. Dieses Muster kann layouttechnisch nicht kollabieren. */
@@ -811,6 +811,7 @@ const PAGE_HTML = `<!DOCTYPE html>
     <div class="plan-scroll">
       <div class="plan-toolbar">
         <button class="hbtn" id="planAddEA">+ Einsatzabschnitt</button>
+        <button class="hbtn" id="planPdf" title="Grafischen Einsatzplan als PDF speichern">🖨 PDF</button>
         <span class="plan-hint">Felder direkt anklicken und ausfüllen · „+ UA" fügt einen Unterabschnitt hinzu</span>
       </div>
 
@@ -2044,6 +2045,64 @@ function etbPdf(auto){
 }
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 document.getElementById('etbPdf').onclick=()=>etbPdf(false);
+
+function planPdf(){
+  const src=document.querySelector('#viewPlan .plan-scroll');
+  if(!src){ alert('Einsatzplan nicht gefunden.'); return; }
+  // Klon erstellen und aufbereiten
+  const clone=src.cloneNode(true);
+  // Werkzeugleiste (Buttons) und Entfernen-Schaltflächen raus
+  clone.querySelectorAll('.plan-toolbar').forEach(el=>el.remove());
+  clone.querySelectorAll('.rem, .ua-add, .ea-add, button').forEach(el=>el.remove());
+  // contenteditable-Felder in reinen Text umwandeln (Cursor/Attribute weg)
+  clone.querySelectorAll('[contenteditable]').forEach(el=>{ el.removeAttribute('contenteditable'); });
+  const einsatz=opName.textContent.trim()||'Einsatz';
+  const abschnitt=opSection.textContent.trim();
+  const stamp=new Date().toLocaleString('de-DE');
+  const doc=\`<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<title>Grafischer Einsatzplan – \${escHtml(einsatz)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:16px;font-size:12px;background:#fff}
+  h1{font-size:19px;margin:0 0 4px}
+  .meta{font-size:11px;color:#333;margin:0 0 14px;line-height:1.6}
+  .meta b{color:#000}
+  .plan-scroll{min-width:0;padding:0}
+  .plan-top{display:grid;grid-template-columns:1.1fr .7fr 1.6fr;gap:12px;align-items:start;margin-bottom:14px}
+  .plan-box{background:#fff;border:1px solid #999;border-radius:6px;padding:9px 11px}
+  .pl-title{font-size:12px;font-weight:800;margin-bottom:8px}
+  .pl-title.accent,.pl-k.accent,.ea-title .lab{color:#1a4e8a}
+  .pl-row{display:flex;gap:6px;font-size:12px;padding:3px 0;border-bottom:1px solid #ddd}
+  .pl-k{color:#555;white-space:nowrap;min-width:78px}
+  .pl-v{flex:1;color:#111;min-height:14px}
+  .pl-v.big{font-weight:700;font-size:14px}
+  .stab-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .plan-connector{display:none}
+  .plan-eas{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .ea-card{position:relative;flex:0 0 250px;background:#fff;border:1px solid #999;border-radius:6px;padding:9px 11px;page-break-inside:avoid;break-inside:avoid}
+  .ea-card .ea-title,.ua-card .ea-title{display:flex;align-items:center;gap:6px;font-weight:800;font-size:12px;margin-bottom:8px}
+  .ea-card .ea-title .lab{color:#1a4e8a}
+  .ea-sub{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 3px}
+  .ua-sub-hd{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555;margin:12px 0 6px;border-top:1px solid #bbb;padding-top:8px}
+  .ua-list{display:flex;flex-direction:column;gap:8px}
+  .ua-card{background:#f4f6f9;border:1px solid #bbb;border-left:3px solid #4a90d9;border-radius:6px;padding:7px 9px}
+  .ua-card .ea-title .lab.ua{color:#2f6ca8}
+  .stw{display:inline-flex;align-items:center;gap:2px;font-family:monospace}
+  input,textarea{border:none;background:transparent;color:#111;font:inherit;padding:0;resize:none;width:100%}
+  @media print{ body{margin:10mm} .ea-card{flex-basis:230px} }
+</style></head><body>
+  <h1>Grafischer Einsatzplan</h1>
+  <div class="meta"><b>Einsatz:</b> \${escHtml(einsatz)}\${abschnitt?\` &nbsp;·&nbsp; <b>Abschnitt:</b> \${escHtml(abschnitt)}\`:''} &nbsp;·&nbsp; <b>Stand:</b> \${stamp}</div>
+  \${clone.outerHTML}
+</body></html>\`;
+  const w=window.open('','_blank');
+  if(!w){ alert('Bitte Popups für diese Seite erlauben, um das PDF zu erzeugen.'); return; }
+  w.document.open();w.document.write(doc);w.document.close();
+  const go=()=>{ try{w.focus();w.print();}catch(e){} };
+  if(w.document.readyState==='complete')setTimeout(go,300); else w.onload=()=>setTimeout(go,300);
+  addLog('info','Grafischer Einsatzplan als PDF erzeugt');
+}
+document.getElementById('planPdf').onclick=()=>planPdf();
 
 btnExport.onclick=()=>{
   const data={einsatz:opName.textContent,zeit:new Date().toISOString(),
